@@ -48,9 +48,22 @@ public partial class NumiconBricksControl : UserControl
     const int spacing = 2;
     var y = 10;
 
+    // Calculate the maximum width to center the entire layout
+    var maxLineLength = 0;
     foreach (var line in lines)
     {
-      var x = 10;
+      if (line.Length > maxLineLength)
+        maxLineLength = line.Length;
+    }
+
+    var totalWidth = maxLineLength * (brickSize + spacing);
+    var canvasWidth = BricksCanvas.ActualWidth > 0 ? BricksCanvas.ActualWidth : this.ActualWidth;
+    var offsetX = (canvasWidth - totalWidth) / 2;
+
+    foreach (var line in lines)
+    {
+      var x = offsetX;
+
       foreach (var brick in line)
       {
         var color = brick switch
@@ -104,13 +117,8 @@ public partial class NumiconBricksControl : UserControl
     }
   }
 
-  private static int StrokeThickness(char brick)
+  private static double StrokeThickness(char brick)
   {
-    if (brick == 'X')
-      return 2;
-    if (brick == ' ')
-      return 0;
-    else
-      return 1;
+    return brick == 'X' ? 0 : 1;
   }
 }
