@@ -1,0 +1,554 @@
+﻿<!doctype html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Przekształcenia – opowieść matematyczna</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: #fff9f0;
+            color: #2d2d2d;
+            min-height: 100vh;
+        }
+        .wrap {
+            max-width: 1060px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+        .layout {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+        @media (max-width: 700px) {
+            .layout { grid-template-columns: 1fr; }
+        }
+
+        /* ── HEADER ── */
+        .header {
+            text-align: center;
+            padding: 12px 0 18px;
+        }
+        .header h1 {
+            font-size: 1.8rem;
+            color: #4f46e5;
+            margin-bottom: 10px;
+        }
+        .top-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        select {
+            font-size: 1rem;
+            padding: 8px 14px;
+            border-radius: 12px;
+            border: 2px solid #c7d2fe;
+            background: #fff;
+            cursor: pointer;
+        }
+        .btn-reset {
+            font-size: 1rem;
+            padding: 8px 18px;
+            border-radius: 12px;
+            border: none;
+            background: #6366f1;
+            color: #fff;
+            cursor: pointer;
+            transition: .15s;
+        }
+        .btn-reset:hover { background: #4f46e5; }
+
+        /* ── EQUATION (wewnątrz kart historii) ── */
+        .equation-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        .eq-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        .eq-box {
+            display: flex;
+            gap: 3px;
+            align-items: center;
+            justify-content: center;
+            background: #f3f4f6;
+            border-radius: 14px;
+            padding: 8px 14px;
+            font-size: 2rem;
+            min-width: 60px;
+            min-height: 62px;
+            transition: background .25s, outline .25s;
+        }
+        .eq-box.green {
+            background: #ecfdf5;
+            outline: 3px solid #34d399;
+        }
+        .eq-box.red {
+            background: #fef2f2;
+            outline: 3px solid #f87171;
+        }
+        .eq-lbl {
+            font-size: .78rem;
+            color: #6b7280;
+            max-width: 110px;
+            text-align: center;
+            line-height: 1.3;
+        }
+        .eq-op {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #4f46e5;
+            line-height: 1;
+            margin-bottom: 24px;
+        }
+        .eq-op.minus { color: #ef4444; }
+        .eq-equals {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #059669;
+            line-height: 1;
+            margin-bottom: 24px;
+        }
+
+        /* ── CONTROLS CARD ── */
+        .controls-card {
+            background: #fff;
+            border-radius: 22px;
+            padding: 18px;
+            box-shadow: 0 4px 24px rgba(79,70,229,0.13);
+            position: sticky;
+            top: 16px;
+        }
+        .controls-title {
+            font-size: .9rem;
+            color: #9ca3af;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+        }
+        .add-buttons, .remove-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .btn-add {
+            font-size: 1.05rem;
+            padding: 12px 20px;
+            border-radius: 14px;
+            border: none;
+            background: #4f46e5;
+            color: #fff;
+            cursor: pointer;
+            transition: .15s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-add:hover:not(:disabled) {
+            background: #4338ca;
+            transform: translateY(-2px);
+        }
+        .btn-add:disabled { opacity: .35; cursor: not-allowed; }
+        .btn-add .item-emoji { font-size: 1.5em; line-height: 1; }
+
+        .btn-remove {
+            font-size: 1.05rem;
+            padding: 12px 20px;
+            border-radius: 14px;
+            border: none;
+            background: #ef4444;
+            color: #fff;
+            cursor: pointer;
+            transition: .15s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-remove:hover:not(:disabled) {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+        .btn-remove:disabled { opacity: .35; cursor: not-allowed; }
+
+        .hint {
+            font-size: .85rem;
+            color: #9ca3af;
+            margin-top: 10px;
+        }
+
+        /* ── HISTORIA ── */
+        .story-card {
+            background: transparent;
+        }
+        .story-card h3 {
+            font-size: 1rem;
+            color: #4f46e5;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .story-list {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        /* KARTA KROKU */
+        .story-item {
+            border-radius: 18px;
+            padding: 16px 18px 14px;
+            font-size: .97rem;
+            line-height: 1.45;
+        }
+        .story-item.intro {
+            background: #f3f4f6;
+            border-left: 5px solid #9ca3af;
+            font-style: italic;
+            color: #6b7280;
+            padding: 14px 18px;
+        }
+        .story-item.add {
+            background: #ecfdf5;
+            border-left: 5px solid #34d399;
+            box-shadow: 0 2px 10px rgba(52,211,153,0.15);
+        }
+        .story-item.remove {
+            background: #fef2f2;
+            border-left: 5px solid #f87171;
+            box-shadow: 0 2px 10px rgba(248,113,113,0.15);
+        }
+        /* napis nad równaniem w karcie */
+        .step-label {
+            font-size: .75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+            margin-bottom: 10px;
+        }
+        .story-item.add    .step-label { color: #059669; }
+        .story-item.remove .step-label { color: #dc2626; }
+        /* zdanie narracyjne */
+        .step-text {
+            font-size: 1rem;
+            color: #374151;
+            border-top: 1px dashed #d1d5db;
+            padding-top: 10px;
+            margin-top: 2px;
+        }
+        .story-item.intro  .step-text { border-color: #d1d5db; }
+        .story-item.add    .step-text { border-color: #a7f3d0; }
+        .story-item.remove .step-text { border-color: #fca5a5; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+
+    <!-- Header -->
+    <div class="header">
+        <h1>📖 Przygody z matematyką</h1>
+        <div class="top-controls">
+            <select id="scenarioSelect"></select>
+            <button class="btn-reset" id="resetBtn">🔄 Nowa historia</button>
+        </div>
+    </div>
+
+    <div class="layout">
+        <!-- Panel operacji (lewy, przyklejony) -->
+        <div class="controls-card">
+            <div class="controls-title">Co chcesz dodać?</div>
+            <div class="add-buttons" id="addButtons"></div>
+            <div class="controls-title" id="removeSectionTitle" style="margin-top:8px;">Co chcesz odjąć?</div>
+            <div class="remove-buttons" id="removeButtons"></div>
+            <div class="hint" id="hintText"></div>
+        </div>
+
+        <!-- Historia (prawa kolumna, scrolluje) -->
+        <div class="story-card">
+            <h3>📚 Historia</h3>
+            <ol class="story-list" id="storyList"></ol>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* ─── DANE SCENARIUSZY ─── */
+    const scenarios = {
+        pani: {
+            label: "Pani i przedmioty",
+            baseLabel: "Pani",
+            baseEmoji: "👩",
+            intro: "Pani zaczyna spacer.",
+            items: [
+                {
+                    id: "parasol", name: "parasol", nameInstr: "parasolem", emoji: "☂️",
+                    addStory:    "Zaczęło padać, więc pani wyjęła parasol.",
+                    removeStory: "Deszcz przestał padać – pani schowała parasol."
+                },
+                {
+                    id: "zakupy", name: "zakupy", nameInstr: "zakupami", emoji: "🛍️",
+                    addStory:    "Pani weszła do sklepu i zrobiła zakupy.",
+                    removeStory: "Pani zostawiła zakupy w domu."
+                },
+                {
+                    id: "pies", name: "pies", nameInstr: "psem", emoji: "🐶",
+                    addStory:    "Do pani podbiegł pies i ruszył z nią na spacer.",
+                    removeStory: "Pies pobiegł dalej – pani została sama."
+                },
+                {
+                    id: "czapka", name: "czapka", nameInstr: "czapką", emoji: "🧢",
+                    addStory:    "Pani założyła czapkę, bo świeciło słońce.",
+                    removeStory: "Pani zdjęła czapkę i schowała ją do torby."
+                }
+            ]
+        },
+        kuchnia: {
+            label: "Kuchnia i smaki",
+            baseLabel: "Ogórek",
+            baseEmoji: "🥒",
+            intro: "Na blacie leży świeży ogórek.",
+            items: [
+                {
+                    id: "smietana", name: "śmietana", nameInstr: "śmietaną", emoji: "🥣",
+                    addStory:    "Dodajemy śmietanę – powstaje mizeria!",
+                    removeStory: "Odejmujemy śmietanę – wracamy do samego ogórka."
+                },
+                {
+                    id: "sol", name: "sól", nameInstr: "solą", emoji: "🧂",
+                    addStory:    "Szczypta soli zmienia smak ogórka.",
+                    removeStory: "Odejmujemy sól – wracamy do ogórka."
+                },
+                {
+                    id: "koperek", name: "koperek", nameInstr: "koperkiem", emoji: "🌿",
+                    addStory:    "Dodajemy koperek – danie staje się bardziej aromatyczne!",
+                    removeStory: "Odejmujemy koperek – wracamy do poprzedniego stanu."
+                }
+            ]
+        }
+    };
+
+    /* ─── STAN GRY ─── */
+    const state = {
+        scenarioKey: "pani",
+        stack: [],   // LIFO
+        history: []  // każdy wpis: { type, text, eq? }
+    };
+
+    /* ─── ELEMENTY UI ─── */
+    const ui = {
+        scenarioSelect:       document.getElementById("scenarioSelect"),
+        addButtons:           document.getElementById("addButtons"),
+        removeButtons:        document.getElementById("removeButtons"),
+        removeSectionTitle:   document.getElementById("removeSectionTitle"),
+        hintText:             document.getElementById("hintText"),
+        storyList:            document.getElementById("storyList"),
+        resetBtn:             document.getElementById("resetBtn")
+    };
+
+    /* ─── POMOCNIKI ─── */
+    function getScenario() { return scenarios[state.scenarioKey]; }
+
+    function stackEmojis(stack, s) {
+        return [s.baseEmoji, ...stack.map(i => i.emoji)];
+    }
+
+    function stackLabel(stack, s) {
+        if (stack.length === 0) return s.baseLabel;
+        const parts = stack.map(i => i.nameInstr);
+        if (parts.length === 1) return s.baseLabel + " z " + parts[0];
+        const last = parts.pop();
+        return s.baseLabel + " z " + parts.join(", ") + " i " + last;
+    }
+
+    function availableItems() {
+        const used = new Set(state.stack.map(i => i.id));
+        return getScenario().items.filter(i => !used.has(i.id));
+    }
+
+    /* ─── BUDOWANIE RÓWNANIA ─── */
+    function makeGroup(emojis, label, colorClass) {
+        const g   = document.createElement("div"); g.className = "eq-group";
+        const box = document.createElement("div"); box.className = "eq-box" + (colorClass ? " " + colorClass : "");
+        box.textContent = emojis.join(" ");
+        const lbl = document.createElement("div"); lbl.className = "eq-lbl";
+        lbl.textContent = label;
+        g.appendChild(box); g.appendChild(lbl);
+        return g;
+    }
+
+    function makeSymbol(text, cssClass) {
+        const d = document.createElement("div");
+        d.className = cssClass;
+        d.textContent = text;
+        return d;
+    }
+
+    function buildEquationRow(eq) {
+        // eq = { isAdd, prevEmojis, prevLabel, item, nextEmojis, nextLabel }
+        const row = document.createElement("div");
+        row.className = "equation-row";
+        const { isAdd, prevEmojis, prevLabel, item, nextEmojis, nextLabel } = eq;
+        row.appendChild(makeGroup(prevEmojis, prevLabel, isAdd ? "" : "red"));
+        row.appendChild(makeSymbol(isAdd ? "+" : "−", "eq-op" + (isAdd ? "" : " minus")));
+        row.appendChild(makeGroup([item.emoji], item.name, isAdd ? "green" : "red"));
+        row.appendChild(makeSymbol("=", "eq-equals"));
+        row.appendChild(makeGroup(nextEmojis, nextLabel, isAdd ? "green" : ""));
+        return row;
+    }
+
+    /* ─── RENDEROWANIE ─── */
+    function render() {
+        const s = getScenario();
+
+        /* Przyciski dodawania */
+        ui.addButtons.innerHTML = "";
+        availableItems().forEach(item => {
+            const btn = document.createElement("button");
+            btn.className = "btn-add";
+            btn.type = "button";
+            btn.innerHTML = `➕ Dodaj <span class="item-emoji">${item.emoji}</span> <strong>${item.name}</strong>`;
+            btn.addEventListener("click", () => addItem(item.id));
+            ui.addButtons.appendChild(btn);
+        });
+        if (availableItems().length === 0) {
+            const note = document.createElement("p");
+            note.style.cssText = "color:#9ca3af;font-size:.9rem";
+            note.textContent = "Wszystkie elementy zostały dodane!";
+            ui.addButtons.appendChild(note);
+        }
+
+        /* Przyciski odejmowania – jeden per element w stosie */
+        ui.removeButtons.innerHTML = "";
+        if (state.stack.length > 0) {
+            ui.removeSectionTitle.style.display = "";
+            state.stack.forEach(item => {
+                const btn = document.createElement("button");
+                btn.className = "btn-remove";
+                btn.type = "button";
+                btn.innerHTML = `➖ Odejmij <span class="item-emoji">${item.emoji}</span> <strong>${item.name}</strong>`;
+                btn.addEventListener("click", () => removeItem(item.id));
+                ui.removeButtons.appendChild(btn);
+            });
+        } else {
+            ui.removeSectionTitle.style.display = "none";
+        }
+
+        /* Podpowiedź */
+        ui.hintText.textContent = state.stack.length > 0
+            ? "Możesz dodać kolejny element lub odjąć dowolny z listy."
+            : "Wybierz element do dodania!";
+
+        /* Historia – każdy krok = równanie + zdanie */
+        ui.storyList.innerHTML = "";
+        state.history.forEach(e => {
+            const li = document.createElement("li");
+            li.className = "story-item " + e.type;
+
+            if (e.type === "intro") {
+                // pudełko startowe
+                const introRow = document.createElement("div");
+                introRow.className = "equation-row";
+                introRow.appendChild(makeGroup([e.baseEmoji], e.baseLabel, ""));
+                li.appendChild(introRow);
+            }
+
+            if (e.eq) {
+                // nagłówek kroku
+                const lbl = document.createElement("div");
+                lbl.className = "step-label";
+                lbl.textContent = e.eq.isAdd ? "➕ Dodawanie" : "➖ Odejmowanie";
+                li.appendChild(lbl);
+                // równanie emoji
+                li.appendChild(buildEquationRow(e.eq));
+            }
+
+            // zdanie narracyjne
+            const txt = document.createElement("div");
+            txt.className = (e.eq || e.type === "intro") ? "step-text" : "";
+            txt.textContent = e.text;
+            li.appendChild(txt);
+
+            ui.storyList.appendChild(li);
+        });
+        const lastItem = ui.storyList.lastElementChild;
+        if (lastItem) lastItem.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+
+    /* ─── AKCJE ─── */
+    function addItem(itemId) {
+        const s    = getScenario();
+        const item = s.items.find(i => i.id === itemId);
+        if (!item) return;
+
+        const prevEmojis = stackEmojis(state.stack, s);
+        const prevLabel  = stackLabel(state.stack, s);
+        state.stack.push(item);
+        const nextEmojis = stackEmojis(state.stack, s);
+        const nextLabel  = stackLabel(state.stack, s);
+
+        state.history.push({
+            type: "add",
+            text: item.addStory,
+            eq: { isAdd: true, prevEmojis, prevLabel, item, nextEmojis, nextLabel }
+        });
+        render();
+    }
+
+    function removeItem(itemId) {
+        const idx = state.stack.findIndex(i => i.id === itemId);
+        if (idx === -1) return;
+        const s    = getScenario();
+        const item = state.stack[idx];
+
+        const prevEmojis = stackEmojis(state.stack, s);
+        const prevLabel  = stackLabel(state.stack, s);
+        state.stack.splice(idx, 1);
+        const nextEmojis = stackEmojis(state.stack, s);
+        const nextLabel  = stackLabel(state.stack, s);
+
+        state.history.push({
+            type: "remove",
+            text: item.removeStory,
+            eq: { isAdd: false, prevEmojis, prevLabel, item, nextEmojis, nextLabel }
+        });
+        render();
+    }
+
+    function resetGame() {
+        const s      = getScenario();
+        state.stack  = [];
+        state.history = [{ type: "intro", text: s.intro, baseEmoji: s.baseEmoji, baseLabel: s.baseLabel }];
+        render();
+    }
+
+    /* ─── INIT ─── */
+    function initSelect() {
+        ui.scenarioSelect.innerHTML = "";
+        Object.entries(scenarios).forEach(([key, val]) => {
+            const opt = document.createElement("option");
+            opt.value = key; opt.textContent = val.label;
+            ui.scenarioSelect.appendChild(opt);
+        });
+        ui.scenarioSelect.value = state.scenarioKey;
+    }
+
+    ui.scenarioSelect.addEventListener("change", e => { state.scenarioKey = e.target.value; resetGame(); });
+    ui.resetBtn.addEventListener("click", resetGame);
+
+    initSelect();
+    resetGame();
+</script>
+</body>
+</html>

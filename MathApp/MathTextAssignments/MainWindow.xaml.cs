@@ -44,6 +44,9 @@ public partial class MainWindow : Window
       this,
       true);
 
+    // Obsługa klawisza Enter
+    this.KeyDown += MainWindow_KeyDown;
+
     LoadProblem();
   }
 
@@ -202,5 +205,14 @@ public partial class MainWindow : Window
     NumiconDisplay.Visibility = NumiconDisplay.Visibility == Visibility.Visible 
       ? Visibility.Collapsed 
       : Visibility.Visible;
+  }
+
+  private void MainWindow_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+  {
+    if (e.Key == System.Windows.Input.Key.Enter)
+    {
+      e.Handled = true;
+      NextCheckButton_Click(NextCheckButton, new RoutedEventArgs());
+    }
   }
 }
